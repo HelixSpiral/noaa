@@ -1,8 +1,12 @@
-package ndbc
+package noaa
 
 import "time"
 
-type NDBC struct{}
+type Client struct {
+	NDBC *NationalDataBuoyCenter
+}
+
+type NationalDataBuoyCenter struct{}
 
 type Bouy struct {
 	ID      int    `json:"id"`

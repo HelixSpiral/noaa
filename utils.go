@@ -1,4 +1,4 @@
-package ndbc
+package noaa
 
 import (
 	"fmt"
