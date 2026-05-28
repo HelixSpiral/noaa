@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+type WindService struct{}
+
 type WindReport struct {
 	Time      int     `json:"time"`
 	Speed     *int    `json:"speed"`
@@ -21,7 +23,7 @@ type WindReport struct {
 	Longitude float64 `json:"longitude"`
 }
 
-func (s *Client) GetWindReports(date time.Time) ([]WindReport, error) {
+func (s *WindService) ByDate(date time.Time) ([]WindReport, error) {
 	var reports []WindReport
 
 	queryUrl := fmt.Sprintf("https://www.spc.noaa.gov/climo/reports/%s_rpts_wind.csv", date.Format("060102"))

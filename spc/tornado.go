@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+type TornadoService struct{}
+
 type TornadoReport struct {
 	Time      int     `json:"time"`
 	F_Scale   *int    `json:"f_scale"`
@@ -21,7 +23,7 @@ type TornadoReport struct {
 	Longitude float64 `json:"longitude"`
 }
 
-func (s *Client) GetTornadoReports(date time.Time) ([]TornadoReport, error) {
+func (s *TornadoService) GetTornadoReports(date time.Time) ([]TornadoReport, error) {
 	var reports []TornadoReport
 
 	queryUrl := fmt.Sprintf("https://www.spc.noaa.gov/climo/reports/%s_rpts_torn.csv", date.Format("060102"))

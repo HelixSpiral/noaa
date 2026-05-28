@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+type HailService struct{}
+
 type HailReport struct {
 	Time      int     `json:"time"`
 	Size      *int    `json:"size"`
@@ -21,7 +23,7 @@ type HailReport struct {
 	Longitude float64 `json:"longitude"`
 }
 
-func (s *Client) GetHailReports(date time.Time) ([]HailReport, error) {
+func (s *HailService) ByDate(date time.Time) ([]HailReport, error) {
 	var reports []HailReport
 
 	queryUrl := fmt.Sprintf("https://www.spc.noaa.gov/climo/reports/%s_rpts_hail.csv", date.Format("060102"))
