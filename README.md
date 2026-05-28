@@ -16,14 +16,16 @@ n := noaa.New()
 
 Call any of the exported functions
 ```go
-resp, err := n.NDBC.GetPictureFromBuoy(44027)
+// Get the latest picture from a buoy camera
+resp, err := n.NDBC.Station(44027).Camera.Latest()
 if err != nil {
     panic(err)
 }
 
 log.Println(resp)
 
-resp2, err := n.NDBC.GetLatestDataFromBuoy(44027)
+// Get the last 5 days of data from a buoy
+resp2, err := n.NDBC.Station(44027).RealTime.Standard()
 if err != nil {
     panic(err)
 }
