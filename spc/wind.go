@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -21,6 +20,8 @@ type WindReport struct {
 	Comments  string  `json:"comments"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
+
+	Errors []error `json:"errors"`
 }
 
 func (s *WindService) ByDate(date time.Time) ([]WindReport, error) {
@@ -42,17 +43,20 @@ func (s *WindService) ByDate(date time.Time) ([]WindReport, error) {
 	}
 
 	for {
+		var report WindReport
+
 		row, err := reader.Read()
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
 
-			log.Println("error processing wind report:", err)
+			report.Errors = append(report.Errors, fmt.Errorf("error parsing row: %w", err))
+			reports = append(reports, report)
 
 			continue
 		}
-		report := WindReport{
+		report = WindReport{
 			Location: row[2],
 			County:   row[3],
 			State:    row[4],
@@ -61,27 +65,19 @@ func (s *WindService) ByDate(date time.Time) ([]WindReport, error) {
 
 		report.Time, err = strconv.Atoi(row[0])
 		if err != nil {
-			log.Println("error processing wind report:", err)
-
-			continue
+			report.Errors = append(report.Errors, fmt.Errorf("error processing report time: %w", err))
 		}
 		report.Speed, err = parseInt(row[1])
 		if err != nil {
-			log.Println("error processing wind report:", err)
-
-			continue
+			report.Errors = append(report.Errors, fmt.Errorf("error processing report speed: %w", err))
 		}
 		report.Latitude, err = strconv.ParseFloat(row[5], 64)
 		if err != nil {
-			log.Println("error processing wind report:", err)
-
-			continue
+			report.Errors = append(report.Errors, fmt.Errorf("error processing report latitude: %w", err))
 		}
 		report.Longitude, err = strconv.ParseFloat(row[6], 64)
 		if err != nil {
-			log.Println("error processing wind report:", err)
-
-			continue
+			report.Errors = append(report.Errors, fmt.Errorf("error processing report longitude: %w", err))
 		}
 
 		reports = append(reports, report)
