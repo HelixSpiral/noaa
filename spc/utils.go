@@ -27,7 +27,7 @@ func parseInt(s string) (*int, error) {
 	return &v, nil
 }
 
-func rawRequest(url string) (io.ReadCloser, error) {
+func fetch(url string) (io.ReadCloser, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err

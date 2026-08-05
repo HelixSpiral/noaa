@@ -26,9 +26,9 @@ type TornadoReport struct {
 func (s *TornadoService) GetTornadoReports(date time.Time) ([]TornadoReport, error) {
 	var reports []TornadoReport
 
-	queryUrl := fmt.Sprintf("https://www.spc.noaa.gov/climo/reports/%s_rpts_torn.csv", date.Format("060102"))
+	queryURL := fmt.Sprintf("https://www.spc.noaa.gov/climo/reports/%s_rpts_torn.csv", date.Format("060102"))
 
-	body, err := rawRequest(queryUrl)
+	body, err := fetch(queryURL)
 	if err != nil {
 		return reports, err
 	}
