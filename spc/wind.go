@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"net/http"
 	"strconv"
 	"time"
 )
@@ -29,13 +28,13 @@ func (s *WindService) ByDate(date time.Time) ([]WindReport, error) {
 
 	queryUrl := fmt.Sprintf("https://www.spc.noaa.gov/climo/reports/%s_rpts_wind.csv", date.Format("060102"))
 
-	resp, err := http.Get(queryUrl)
+	body, err := rawRequest(queryUrl)
 	if err != nil {
 		return reports, err
 	}
-	defer resp.Body.Close()
+	defer body.Close()
 
-	reader := csv.NewReader(resp.Body)
+	reader := csv.NewReader(body)
 
 	_, err = reader.Read() // Get rid of header
 	if err != nil {

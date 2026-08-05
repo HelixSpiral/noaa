@@ -1,6 +1,9 @@
 package spc
 
 import (
+	"fmt"
+	"io"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -22,4 +25,20 @@ func parseInt(s string) (*int, error) {
 	}
 
 	return &v, nil
+}
+
+func rawRequest(url string) (io.ReadCloser, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+
+		return nil, fmt.Errorf("unexpected response: %s", resp.Status)
+
+	}
+
+	return resp.Body, nil
 }
