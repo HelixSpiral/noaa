@@ -55,26 +55,34 @@ func (s *WindService) ByDate(date time.Time) ([]WindReport, error) {
 
 			continue
 		}
-		report = WindReport{
-			Location: row[2],
-			County:   row[3],
-			State:    row[4],
-			Comments: row[7],
+
+		if len(row) < expectedColumns {
+			report.Errors = append(report.Errors, fmt.Errorf("expected %d columns, got %d", expectedColumns, len(row)))
+			reports = append(reports, report)
+
+			continue
 		}
 
-		report.Time, err = strconv.Atoi(row[0])
+		report = WindReport{
+			Location: row[colLocation],
+			County:   row[colCounty],
+			State:    row[colState],
+			Comments: row[colComments],
+		}
+
+		report.Time, err = strconv.Atoi(row[colTime])
 		if err != nil {
 			report.Errors = append(report.Errors, fmt.Errorf("error processing report time: %w", err))
 		}
-		report.Speed, err = parseInt(row[1])
+		report.Speed, err = parseInt(row[colMetric])
 		if err != nil {
 			report.Errors = append(report.Errors, fmt.Errorf("error processing report speed: %w", err))
 		}
-		report.Latitude, err = strconv.ParseFloat(row[5], 64)
+		report.Latitude, err = strconv.ParseFloat(row[colLatitude], 64)
 		if err != nil {
 			report.Errors = append(report.Errors, fmt.Errorf("error processing report latitude: %w", err))
 		}
-		report.Longitude, err = strconv.ParseFloat(row[6], 64)
+		report.Longitude, err = strconv.ParseFloat(row[colLongitude], 64)
 		if err != nil {
 			report.Errors = append(report.Errors, fmt.Errorf("error processing report longitude: %w", err))
 		}
