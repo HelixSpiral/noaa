@@ -50,14 +50,14 @@ func (s *TornadoService) GetTornadoReports(date time.Time) ([]TornadoReport, err
 				break
 			}
 
-			report.Errors = append(report.Errors, fmt.Errorf("error parsing row: %w", err))
+			report.Errors = append(report.Errors, fmt.Errorf("error parsing row: %w, row: %+v", err, row))
 			reports = append(reports, report)
 
 			continue
 		}
 
 		if len(row) < expectedColumns {
-			report.Errors = append(report.Errors, fmt.Errorf("expected %d columns, got %d", expectedColumns, len(row)))
+			report.Errors = append(report.Errors, fmt.Errorf("expected %d columns, got %d: %+v", expectedColumns, len(row), row))
 			reports = append(reports, report)
 
 			continue
@@ -68,6 +68,11 @@ func (s *TornadoService) GetTornadoReports(date time.Time) ([]TornadoReport, err
 			County:   row[colCounty],
 			State:    row[colState],
 			Comments: row[colComments],
+		}
+
+		_, err = validateState(report.State)
+		if err != nil {
+			report.Errors = append(report.Errors, fmt.Errorf("error processing report state: %w", err))
 		}
 
 		report.Time, err = strconv.Atoi(row[colTime])
