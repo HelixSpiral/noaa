@@ -4,8 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
-	"net/http"
 	"strconv"
 	"time"
 )
@@ -21,20 +19,22 @@ type TornadoReport struct {
 	Comments  string  `json:"comments"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
+
+	Errors []error `json:"errors"`
 }
 
 func (s *TornadoService) GetTornadoReports(date time.Time) ([]TornadoReport, error) {
 	var reports []TornadoReport
 
-	queryUrl := fmt.Sprintf("https://www.spc.noaa.gov/climo/reports/%s_rpts_torn.csv", date.Format("060102"))
+	queryURL := fmt.Sprintf("https://www.spc.noaa.gov/climo/reports/%s_rpts_torn.csv", date.Format("060102"))
 
-	resp, err := http.Get(queryUrl)
+	body, err := fetch(queryURL)
 	if err != nil {
 		return reports, err
 	}
-	defer resp.Body.Close()
+	defer body.Close()
 
-	reader := csv.NewReader(resp.Body)
+	reader := csv.NewReader(body)
 
 	_, err = reader.Read() // Get rid of header
 	if err != nil {
@@ -42,46 +42,54 @@ func (s *TornadoService) GetTornadoReports(date time.Time) ([]TornadoReport, err
 	}
 
 	for {
+		var report TornadoReport
+
 		row, err := reader.Read()
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
 
-			log.Println("error processing tornado report:", err)
+			report.Errors = append(report.Errors, fmt.Errorf("error parsing row: %w, row: %+v", err, row))
+			reports = append(reports, report)
 
 			continue
 		}
-		report := TornadoReport{
-			Location: row[2],
-			County:   row[3],
-			State:    row[4],
-			Comments: row[7],
+
+		if len(row) < expectedColumns {
+			report.Errors = append(report.Errors, fmt.Errorf("expected %d columns, got %d: %+v", expectedColumns, len(row), row))
+			reports = append(reports, report)
+
+			continue
 		}
 
-		report.Time, err = strconv.Atoi(row[0])
+		report = TornadoReport{
+			Location: row[colLocation],
+			County:   row[colCounty],
+			State:    row[colState],
+			Comments: row[colComments],
+		}
+
+		_, err = validateState(report.State)
 		if err != nil {
-			log.Println("error processing tornado report:", err)
-
-			continue
+			report.Errors = append(report.Errors, fmt.Errorf("error processing report state: %w", err))
 		}
-		report.F_Scale, err = parseInt(row[1])
-		if err != nil {
-			log.Println("error processing tornado report:", err)
 
-			continue
+		report.Time, err = strconv.Atoi(row[colTime])
+		if err != nil {
+			report.Errors = append(report.Errors, fmt.Errorf("error processing report time: %w", err))
 		}
-		report.Latitude, err = strconv.ParseFloat(row[5], 64)
+		report.F_Scale, err = parseInt(row[colMetric])
 		if err != nil {
-			log.Println("error processing tornado report:", err)
-
-			continue
+			report.Errors = append(report.Errors, fmt.Errorf("error processing report f scale: %w", err))
 		}
-		report.Longitude, err = strconv.ParseFloat(row[6], 64)
+		report.Latitude, err = strconv.ParseFloat(row[colLatitude], 64)
 		if err != nil {
-			log.Println("error processing tornado report:", err)
-
-			continue
+			report.Errors = append(report.Errors, fmt.Errorf("error processing report latitude: %w", err))
+		}
+		report.Longitude, err = strconv.ParseFloat(row[colLongitude], 64)
+		if err != nil {
+			report.Errors = append(report.Errors, fmt.Errorf("error processing report longitude: %w", err))
 		}
 
 		reports = append(reports, report)

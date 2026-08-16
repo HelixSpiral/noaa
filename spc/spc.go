@@ -10,6 +10,20 @@ type Service struct {
 	Wind    *WindService
 }
 
+// expectedColumns is the expected number of columns for the hail, torando, and wind CSVs
+const expectedColumns = 8
+
+const (
+	colTime = iota
+	colMetric
+	colLocation
+	colCounty
+	colState
+	colLatitude
+	colLongitude
+	colComments
+)
+
 func New() *Client {
 	return &Client{
 		Reports: &Service{
